@@ -1,11 +1,14 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Space Hack";
 }
 
-@*<div class="text-center">
+<div class="text-center">
     <h1 class="display-4">Hackathon 2021 - Space Hack</h1>
-    <p><img src="~/images/Station.jpg" height="452" width="842" /></p>
-</div>*@
+    <video height="452" width="842" controls>
+    <source src="~/videos/Final.mov" type="video/mp4">
+    Your browser does not support the video element. Kindly update it to latest version.
+  </video >
+</div>
 
 <!DOCTYPE html>
 <html>
@@ -21,237 +24,44 @@
 </head>
 
 <body>
-    <script type="module">
-        import * as THREE from './js/three.module.js';
-        import { TrackballControls } from './js/TrackballControls.js';
-        import { FBXLoader } from './js/FBXLoader.js';
+    <br />
+<h1>RF Scan in Space Code</h1>
 
-        let perspectiveCamera, controls, scene, renderer;
+    <p dir="auto">Scan radio frequency emissions in the International Space Station.</p>
 
+    <p dir="auto">Inspired by, and tested on, <a href="https://github.com/Azure/mock-spacestation">the Azure Mock Space Station</a>.</p>
 
-        const frustumSize = 400;
+<h2>Description</h2>
+    
+    <p dir="auto">Radio emissions can be monitored with an RF receiver on mount of the International Space Station (ISS). The goal of the project is to enable better space exploration, and safety mechanisms, to further benefit the ISS’ mission of bringing benefits to people on Earth.</p>
+    
+    <p dir="auto">Emissions raw data can be ingested and processed by a python module which would be exported in a Docker container to run in the onboard HP Spaceboard computer-2. The compute needs to be done onboard the ISS because the required sample rates for these signals is high. If there is special interest in a specific frequency, the on-board computer can filter out the noise and keep logs of such signal. Radio sources can be natural or man-made. Logs processed will be time, frequency, power and ISS position.</p>
 
-        init();
-        animate();
+<h2>Inspiration</h2>
 
-        function perc2color(perc) {
-            let r = 0, g = 0, b = 0;
-            if (perc < 50) {
-                r = 255;
-                g = Math.round(5.1 * perc);
-            }
-            else {
-                g = 255;
-                r = Math.round(510 - 5.10 * perc);
-            }
-            let h = (r * 0x10000) + (g * 0x100) + (b * 0x1);
-            return h;
-        }
+    <p dir="auto">Space travel will become more usual in the future. There are multiple applications using radio signals that travel and it would be interesting to see how we can manage that computed data in Azure.</p>
+
+<h2>How It Will Work / How It Will Be Built</h2>
 
 
-        function signalFor(pos, power, frequency) {
-            const signalLength = power;
-            const signal = new THREE.Mesh(
-                new THREE.ConeGeometry(100, signalLength, 32),
-                new THREE.MeshPhongMaterial({ color: perc2color((frequency / 1000) * 100) })
-            );
+    <p dir="auto">Process is as follows:</p>
 
-            signal.position.x = pos.x;
-            signal.position.y = pos.y;
-            signal.position.z = pos.z;
+       <ol dir="auto">
+    <li>HP Spaceboard computer-2 aboard the ISS will run a Python module containerized in Docker (&lt;1 GB) and read raw signal input from an RF receiver, apply a Fourier transform and output information of frequencies. Docker container should run with minimum human interaction. The program will have previous knowledge of which frequency is of interest, remove the noise, calculate the power and save logs in a Parquet format.</li>
+    <li>Data from the ISS will be downloaded to ground station in a small transfer window: 2 Mbit/sec, two hours a week.</li>
+    <li>Azure Storage can get the log file from ground station using AzCopy. A Logic app can identify when a new file has been uploaded and send an email notification from an Office 365 mailbox to team members and turn-on an IoT light bulb.</li>
+    <li>Data Factory can orchestrate and transform data from Parquet to CSV.</li>
+    <li>Azure Function picks up the log time and returns the ISS location at the time when the frequency was detected. This information will be written back to the CSV.</li>
+    <li>SQL server can create tables using the CSV file.</li>
+    <li>Power BI can present reports to internal users and embed reports so they can be used by other apps.</li>
+    <li>Azure Web App can publish some reports and have 3D visualizations in a .NET code 5 site.</li>
+    <li>Note: we are generating mock data for the RF receiver hardware.</li>
+    </ol>
 
-            var issPosition = pos.clone();
+    <br />
+    <br />
+    <br />
 
-            // Arbitratry distance to look at
-            const distance = 10000;
-            var signalDirectionVector = issPosition.clone().normalize();
-            var signalDirection = new THREE.Vector3(
-                issPosition.x + (distance * signalDirectionVector.x),
-                issPosition.y + (distance * signalDirectionVector.y),
-                issPosition.z + (distance * signalDirectionVector.z));
-
-            signal.geometry.rotateX(-Math.PI * 0.5);
-            signal.geometry.translate(0, 0, signalLength / 2);
-            signal.lookAt(signalDirection);
-
-            return signal;
-        }
-
-        function init() {
-
-            const aspect = window.innerWidth / window.innerHeight;
-
-            perspectiveCamera = new THREE.PerspectiveCamera(45, aspect, 100, 10000000);
-            perspectiveCamera.position.x = 30000;
-            perspectiveCamera.up = new THREE.Vector3(0, 0, 1);
-
-            scene = new THREE.Scene();
-
-            scene.add(new THREE.AmbientLight(0xCCCCCC));
-
-            // const sunDistance = 1495978.70700;
-
-            var startTime = new Date(Date.now());
-            var endTime = new Date(startTime.getTime() + 1000 * 60 * 60 * 2);
-
-            const sphere = false;
-
-            //fetch(`https://localhost:44336/Home/GetData?start=${startTime.toISOString()}&end=${endTime.toISOString()}`)
-            fetch(`/Home/GetData?start=${startTime.toISOString()}&end=${endTime.toISOString()}`)
-                .then(resp => resp.json())
-                .then(res => {
-                    const resp = JSON.parse(res.toLowerCase())
-                    if (sphere) {                       
-                        resp.result.data.forEach(dataResult => {
-                            dataResult.coordinates.forEach(coordinate => {
-                                for (let i = 0; i < coordinate.x.length; i++) {
-                                    const iss = new THREE.Mesh(
-                                        new THREE.SphereGeometry(100, 32, 32),
-                                        new THREE.MeshBasicMaterial({ color: 0x00eeff }));
-
-
-                                    iss.position.x = coordinate.x[i];
-                                    iss.position.y = coordinate.y[i];
-                                    iss.position.z = coordinate.z[i];
-                                    scene.add(iss);
-                                    scene.add(signalFor(
-                                        iss.position,
-                                        (Math.random() * 900) + 100,
-                                        (Math.random() * 900) + 100
-                                    ));
-                                }
-                            });
-                        });
-                    }
-                    else {
-                        const loader = new FBXLoader();
-
-                        // https://nasa3d.arc.nasa.gov/detail/iss-6628
-                        loader.load('img/ISSComplete1.fbx.txt', function (object) {
-                        //loader.load('https://hackathonstg.blob.core.windows.net/fbx/ISSComplete1.fbx.txt', function (object) {
-                            resp.result.data.forEach(dataResult => {
-                                dataResult.coordinates.forEach(coordinate => {
-                                    for (let i = 0; i < coordinate.x.length; i++) {
-                                        const iss = object.clone();
-                                        iss.position.x = coordinate.x[i];
-                                        iss.position.y = coordinate.y[i];
-                                        iss.position.z = coordinate.z[i];
-                                        iss.scale.x = 100;
-                                        iss.scale.y = 100;
-                                        iss.scale.z = 100;
-                                        scene.add(iss);
-                                        scene.add(signalFor(
-                                            iss.position,
-                                            (Math.random() * 900) + 100,
-                                            (Math.random() * 900) + 100
-                                        ));
-                                    }
-                                });
-                            });
-
-                        });
-                    }
-                });
-
-
-
-            const geometry = new THREE.ConeGeometry(5, 20, 32);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-            const cone = new THREE.Mesh(geometry, material);
-            scene.add(cone);
-
-            // var light = new THREE.DirectionalLight(0xffffff, 1);
-            // light.position.set(sunDistance, 0, 0);
-            // scene.add(light);
-
-            var textureLoader = new THREE.TextureLoader();
-
-            const earthDiameter = 12742;
-
-            var earth = new THREE.Mesh(
-                new THREE.SphereGeometry(earthDiameter / 2, 64, 64),
-                new THREE.MeshPhongMaterial({
-                    map: textureLoader.load('img/earth4k.jpg'),
-                    bumpMap: textureLoader.load('img/earth4k-bump.jpg'),
-                    bumpScale: 100,
-                })
-            );
-
-            earth.rotation.x = Math.PI / 2;
-
-            scene.add(earth);
-
-            const xAxis = new THREE.Vector3(1, 0, 0);
-            const yAxis = new THREE.Vector3(0, 1, 0);
-            const zAxis = new THREE.Vector3(0, 0, 1);
-
-            const origin = new THREE.Vector3(0, 0, 0);
-            const length = 20000 / 2;
-
-            const xArrow = new THREE.ArrowHelper(xAxis, origin, length, 0xFF0000);
-            const yArrow = new THREE.ArrowHelper(yAxis, origin, length, 0x00FF00);
-            const zArrow = new THREE.ArrowHelper(zAxis, origin, length, 0x0000FF);
-            scene.add(xArrow);
-            scene.add(yArrow);
-            scene.add(zArrow);
-
-            // renderer
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            window.addEventListener('resize', onWindowResize);
-
-            createControls(perspectiveCamera);
-
-        }
-
-        function createControls(camera) {
-
-            controls = new TrackballControls(camera, renderer.domElement);
-
-            controls.rotateSpeed = 1.0;
-            controls.zoomSpeed = 1.2;
-            controls.panSpeed = 0.8;
-
-            controls.keys = ['KeyA', 'KeyS', 'KeyD'];
-
-        }
-
-        function onWindowResize() {
-
-            const aspect = window.innerWidth / window.innerHeight;
-
-            perspectiveCamera.aspect = aspect;
-            perspectiveCamera.updateProjectionMatrix();
-
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-            controls.handleResize();
-
-        }
-
-        function animate() {
-
-            requestAnimationFrame(animate);
-
-            controls.update();
-
-            render();
-
-        }
-
-        function render() {
-
-            const camera = perspectiveCamera;
-
-            renderer.render(scene, camera);
-
-        }
-
-    </script>
 </body>
 
 </html>
