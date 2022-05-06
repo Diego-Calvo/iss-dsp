@@ -1,0 +1,10 @@
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\bin\Debug\net5.0\SSC.deps.json
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\bin\Debug\net5.0\SSC.dll
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\bin\Debug\net5.0\SSC.pdb
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\SSC.csproj.AssemblyReference.cache
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\SSC.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\SSC.csproj.CoreCompileInputs.cache
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\SSC.dll
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\refint\SSC.dll
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\SSC.pdb
+C:\Users\dicalvo\source\repos\ISSWebsite\iss-dsp\ISSWeb\SSC\obj\Debug\net5.0\ref\SSC.dll
